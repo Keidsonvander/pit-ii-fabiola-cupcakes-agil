@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cupcake Boutique — Fabiola Saviato</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#fff9f6;color:#302420}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 7%;background:#fff;border-bottom:1px solid #eadcd5;position:sticky;top:0;z-index:10}
+.marca{font-size:1.4rem;font-weight:800;color:#9b5a61}.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer;background:#b56f78;color:#fff}
+.hero,.secao{max-width:1120px;margin:auto}.hero{margin-top:28px;padding:46px;border-radius:26px;background:linear-gradient(135deg,#f8e2df,#fff3e6)}
+.hero h1{font-size:clamp(2.2rem,5vw,3.7rem);margin:10px 0}.tag{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;font-weight:800;color:#a4686e}
+.secao{padding:42px 22px}.grade{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.card{background:#fff;border:1px solid #eadbd6;border-radius:18px;padding:20px}
+.ico{font-size:3rem}.linha,.item{display:flex;justify-content:space-between;align-items:center;gap:12px}.acoes{display:flex;gap:6px;align-items:center}.mini{border:1px solid #dcc8c3;background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer}
+.painel{display:grid;grid-template-columns:1fr 1.15fr;gap:28px;background:#fff;border:1px solid #eadbd6;border-radius:22px;margin-bottom:35px}
+.painel form{display:grid;gap:14px}.painel label{font-weight:700;display:grid;gap:6px}.painel input,.painel textarea,.painel select{padding:11px;border:1px solid #d8c7c2;border-radius:10px;font:inherit}
+.resumo{background:#fff3ef;border:1px solid #eadbd6;border-radius:12px;padding:14px}.msg{font-weight:700;min-height:24px}.status{margin-top:10px;padding:14px;border-radius:12px;background:#f7eeeb}
+.etapas{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.etapa{padding:7px 10px;border-radius:999px;background:#eadfdc}.etapa.ativa{background:#b56f78;color:#fff}
+@media(max-width:900px){.grade{grid-template-columns:repeat(2,1fr)}.painel{grid-template-columns:1fr}}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start;gap:12px}.grade{grid-template-columns:1fr}.hero{margin:18px;padding:28px 20px}.secao{padding:30px 18px}.btn{width:100%}.painel form{gap:16px}}
+</style>
+</head>
+<body>
+<header>
+<div><div class="marca">Cupcake Boutique</div><small>Fabiola Saviato • RGM 33636702</small></div>
+<button class="btn" onclick="document.getElementById('pedido').scrollIntoView({behavior:'smooth'})">Carrinho (<span id="qtd">0</span>)</button>
+</header>
+<main>
+<section class="hero">
+<span class="tag">PIT II • Solução Web</span>
+<h1>Escolha, personalize e finalize seu pedido.</h1>
+<p>Aplicação acadêmica para representar o fluxo de compra de cupcakes gourmet com catálogo, carrinho, pagamento e entrega.</p>
+</section>
+
+<section class="secao">
+<span class="tag">Catálogo</span><h2>Sabores disponíveis</h2>
+<div id="grade" class="grade"></div>
+</section>
+
+<section id="pedido" class="secao painel">
+<div>
+<span class="tag">Finalização</span>
+<h2>Complete seu pedido</h2>
+<p>Confira os itens, informe seus dados e escolha como deseja pagar e receber.</p>
+</div>
+<form id="form" novalidate>
+<label>Nome<input id="nome"></label>
+<label>Telefone<input id="tel"></label>
+<label>Endereço<textarea id="end"></textarea></label>
+<label>Pagamento<select id="pag"><option value="">Selecione</option><option>Pix</option><option>Cartão</option><option>Dinheiro</option></select></label>
+<label>Entrega<select id="entrega"><option value="">Selecione</option><option>Entrega no endereço</option><option>Retirada</option></select></label>
+<div id="resumo" class="resumo">Nenhum produto no carrinho.</div>
+<button class="btn" type="submit">Finalizar pedido</button>
+<p id="msg" class="msg"></p>
+<div id="status"></div>
+</form>
+</section>
+</main>
+
+<script>
+const produtos=[
+{id:1,n:'Chocolate Intenso',d:'Massa de chocolate com cobertura cremosa.',p:9.9,ico:'🧁'},
+{id:2,n:'Morango Delicado',d:'Baunilha com creme e morango.',p:10.5,ico:'🍓'},
+{id:3,n:'Baunilha Clássica',d:'Massa leve com cobertura artesanal.',p:8.9,ico:'🌼'},
+{id:4,n:'Red Velvet',d:'Massa red velvet com cream cheese.',p:11.5,ico:'❤️'}
+];
+const c=new Map();
+const grade=document.getElementById('grade'),qtd=document.getElementById('qtd'),resumo=document.getElementById('resumo'),msg=document.getElementById('msg'),status=document.getElementById('status');
+
+function dinheiro(v){return 'R$ '+v.toFixed(2).replace('.',',')}
+function render(){grade.innerHTML=produtos.map(x=>`<article class="card"><div class="ico">${x.ico}</div><h3>${x.n}</h3><p>${x.d}</p><div class="linha"><strong>${dinheiro(x.p)}</strong><button class="btn" onclick="add(${x.id})">Adicionar</button></div></article>`).join('')}
+function add(id){const p=produtos.find(x=>x.id===id),a=c.get(id)||{...p,q:0};a.q++;c.set(id,a);atualiza();msg.textContent=`${p.n} adicionado ao carrinho.`}
+function alterar(id,d){const a=c.get(id);if(!a)return;a.q+=d;if(a.q<=0)c.delete(id);else c.set(id,a);atualiza()}
+function remover(id){c.delete(id);atualiza()}
+function atualiza(){
+ let total=0,qt=0,l=[];
+ c.forEach(x=>{qt+=x.q;total+=x.p*x.q;l.push(`<div class="item"><div><strong>${x.n}</strong><br><small>${dinheiro(x.p)} cada</small></div><div class="acoes"><button type="button" class="mini" onclick="alterar(${x.id},-1)">−</button><span>${x.q}</span><button type="button" class="mini" onclick="alterar(${x.id},1)">+</button><button type="button" class="mini" onclick="remover(${x.id})">Remover</button></div></div>`)});
+ qtd.textContent=qt;
+ resumo.innerHTML=c.size?`${l.join('<hr>')}<hr><div class="item"><strong>Total</strong><strong>${dinheiro(total)}</strong></div>`:'Nenhum produto no carrinho.'
+}
+document.getElementById('form').onsubmit=e=>{
+ e.preventDefault();
+ const faltando=[];
+ if(!nome.value.trim())faltando.push('nome');
+ if(!tel.value.trim())faltando.push('telefone');
+ if(!end.value.trim())faltando.push('endereço');
+ if(!pag.value)faltando.push('pagamento');
+ if(!entrega.value)faltando.push('entrega');
+ if(!c.size){msg.textContent='Adicione pelo menos um produto ao carrinho.';return}
+ if(faltando.length){msg.textContent='Preencha os campos obrigatórios: '+faltando.join(', ')+'.';return}
+ const numero=Math.floor(1000+Math.random()*9000);
+ msg.textContent=`Pedido #${numero} confirmado com sucesso.`;
+ status.innerHTML=`<div class="status"><strong>Acompanhamento do pedido:</strong><div class="etapas"><span class="etapa ativa">Pedido recebido</span><span class="etapa">Pagamento confirmado</span><span class="etapa">Em preparo</span><span class="etapa">Em entrega</span><span class="etapa">Concluído</span></div></div>`;
+ c.clear();atualiza();e.target.reset()
+}
+render();atualiza();
+</script>
+</body>
+</html>
